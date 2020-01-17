@@ -1,15 +1,13 @@
-FROM golang:1.12.10
+FROM golang:1.13.4
 
-RUN \
-    apt-get update \
-      && apt-get install -y --no-install-recommends \
-         netcat \
-         python-pip \
-         rsync \
-         virtualenv \
-         libpcap-dev \
-      && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-RUN pip install --upgrade pip
-RUN pip install --upgrade setuptools
-RUN pip install --upgrade docker-compose==1.23.2
+COPY filebeat .
+
+COPY filebeat.yml .
+
+ARG network=host
+
+USER root
+
+ENTRYPOINT ["./filebeat"]

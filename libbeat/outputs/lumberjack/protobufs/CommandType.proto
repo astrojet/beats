@@ -1,0 +1,71 @@
+syntax = "proto2";
+
+package com.tutsut.proto;
+
+enum CommandType {
+    // method handles
+	ACK = 1;
+	BAD_ENVELOP = 2;
+	BLOCK_FULL = 3;
+
+	// Used for registering with parent in the hierarchy
+	REGISTER_DC = 4;
+	REGISTER_DW = 5;
+
+	// Used for finding out who to send the log data.
+	// Start with Master. Master sends to the right DC
+	// DC sends to the first DW
+	// When DW is full, it sends the client back to DC and then DC sends it to the
+	// next DW
+	  getIPReport = 6;
+	 WRITE_LOG = 7;
+	  WriteToNextWorker = 8;
+
+	 ADD_LOG = 9;
+	 QUERY_LOG = 10;
+
+	  WriteEvents = 11;
+	  WriteMetrics = 12;
+
+	// From DomainWorker to DomainWorker
+	  ReplicateLog = 13;
+
+	// This is an advanced topic of being able to create partitions within a cluster
+	// Not expected in first version
+	// From DomainController
+	  RegisterSubCluster = 14;
+
+	// From Master
+	  AreYouAlive = 15;
+	  IsSubClusterOk = 16;
+
+	// From Master to DomainController and from DomainController to DomainWorker
+
+	// From Client
+	  GetWorkerList = 20;
+	  GetControllerList = 21;
+
+	// From Monitoring/Ops Client to Master
+
+	  GetClusterDetails = 22;
+	  GetAllWorkers = 23;
+	  GetAllControlers = 24;
+	  GetClusterStats = 25;
+	  GetWorkerStats = 26;
+
+	  GetMeMyBuddies = 27;
+	  IAmReadyForBusiness = 28;
+
+	  GoToNextWorker = 29;
+	  TailRequest = 30;
+
+	  TrackingRequestForOneNameSpace = 31;
+	  TrackingRequestForMultipleNameSpaces = 32;
+	  ReferenceQueryRequest = 33;
+	  SIMPLE_QUERY = 34;
+	  LeftJoinQueryRequest = 35;
+	  METRIC_QUERY = 36;
+	  AddNameSpace = 37; // sent by Worker to Governor
+	  RemoveNameSpace = 38; // sent by Worker to Governor
+	  GetNameSpace = 39; // sent by Worker to Governor
+  }

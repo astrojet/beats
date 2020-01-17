@@ -1,0 +1,180 @@
+syntax = "proto2";
+
+package com.tutsut.proto;
+import "CommandType.proto";
+//import "com/google/protobuf/any.proto";
+
+// log name space
+message Metadata {
+  map < string, string > namespace = 1;
+}
+
+// A single log entry for a specific timestamp.
+message LogLine {
+  optional int64 time_stamp = 1;
+  optional string content = 2;
+}
+
+// Contains one or more log segments as provided by LogsProcessors and read by Workers.
+message LogLineSet {
+  optional string key = 1;
+  optional Metadata metadata = 2;
+  repeated LogLine log_lines = 3;
+}
+
+// Used by Workers to update Governors about active namespaces they hold
+message NameSpaceWorkerTuple {
+  optional Metadata metadata = 1;
+  optional int64 start_time = 2;
+  optional int32 workerId = 3;
+}
+
+// Internal aggregated set of log segments stored and accessed as a unit.
+message LogBlock {
+  message Header {
+    optional int64 start_time = 1;
+    optional int64 end_time = 2;
+    optional Metadata metadata = 3;
+  }
+
+  optional Header block_header = 1;
+  repeated LogLine log_lines = 2;
+}
+
+// select (selectRegEx) from (metadata[optionally partial]) for time (time1) to (time2) where (whereRegEx)
+message QueryRequest {
+  optional int32 requestId = 1; // for correlation
+  optional int64 start_time = 2;
+  optional int64 end_time = 3;
+  optional Metadata metadata = 4;
+  optional string selectRegEx = 5;
+  optional string whereRegEx = 6;
+  optional bool isRegEx = 7;
+}
+
+message QueryRequestBlockList {
+  optional int32 requestId = 1; // for correlation
+  repeated Metadata metadata = 2;
+  optional string selectRegEx = 3;
+  optional string whereRegEx = 4;
+}
+
+// left join query1 with query2
+message LeftJoinRequest {
+  optional QueryRequest leftQueryRequest = 1;
+  optional QueryRequest rightQueryRequest = 2;
+}
+
+message QueryResponse {
+  optional int32 requestId = 1; // for correlation
+  repeated LogLine logLines = 2;
+  optional TransactionReport tx = 4;
+}
+
+
+message TransactionReport {
+    optional string entityType = 1;
+    map<string, string> stats = 2;
+    repeated TransactionReport subTx = 3;
+}
+
+
+message QueryReferenceUnit {
+  optional int32 blockId = 1; // for correlation
+  optional int32 lineId = 2; // for correlation
+  optional int32 tokenLocation = 3; // for correlation
+  optional int32 tokenLength = 4; // for correlation
+  optional int64 timeStamp = 5;
+  optional int32 entityId = 6;
+}
+
+message QueryReferenceResponse {
+  optional int32 requestId = 1; // for correlation
+  optional int32 entityId = 2; // for correlation
+  repeated QueryReferenceUnit queryReferenceUnits = 3;
+  optional TransactionReport tx = 4;
+}
+
+message MetricQueryRequest {
+  optional int32 requestId = 1; // for correlation
+  optional int64 start_time = 2;
+  optional int64 end_time = 3;
+  optional Metadata metadata = 4;
+  optional int32 unitOfTimeInSeconds = 6;
+  optional int32 totalTimeFromNowInSeconds = 7;
+  optional string selectRegEx = 8;
+  optional string whereRegEx = 9;
+}
+
+message MetricQueryResponseUnit {
+  optional int64 timeStamp = 1;
+  optional int32 count = 2;
+  optional double total = 3;
+  optional int32 min = 4;
+  optional int32 max = 5;
+}
+
+message MetricQueryResponse {
+  optional int32 requestId = 1; // for correlation
+  repeated MetricQueryResponseUnit metricQueryResponseUnit = 2;
+}
+
+// track a token across namespaces or in one namespace or tail
+// if start time is missing, now is the start time
+// if end time is missing, then continue till a terminate request comes in
+message TokenTrackingRequest {
+  optional int32 requestId = 1; // for correlation
+  optional int64 end_time = 2;
+  repeated Metadata metadata = 3;
+  optional bool isRegEx = 4;
+  optional string expression = 5;
+}
+
+message TokenTrackingResponse {
+  optional int32 requestId = 1;
+  optional int64 timeStamp = 2;
+  optional Metadata metadata = 3; // will be needed for token tracking across name spaces
+  optional string expression = 4;
+}
+
+message WorkingEntity {
+  optional string ip = 1; // ip address for commands that requires registration
+  optional int32 port = 2;
+  optional int32 entityId = 3; // id of an entity. Could be the requesting entity or replying one
+  optional string entityName = 4; // human readable name of an entity. Could be the requesting entity or replying one
+  //TODO Add Region here 
+}
+
+message CommsEnvelop {
+  optional int64 timeStamp = 1;
+  optional CommandType commandType = 2; // ID that defines the command
+  optional bool executionStatus = 4; // true if success
+
+  // this is for outgoing entity information for operations like registration. Can be optimized to use workingEntity
+  optional string ip = 5; // ip address for commands that requires registration
+  optional int32 port =6;
+  optional int32 entityId = 7; // id of an entity. Could be the requesting entity or replying one
+  optional string entityName = 8; // human readable name of an entity. Could be the requesting entity or replying one
+
+  optional string replyId = 9; // for tracking the command flow
+  optional string replyMessage = 10; // human readable reply message
+
+  optional WorkingEntity messageSender = 11; 
+  
+  optional TokenTrackingRequest tokenTrackingRequest = 12;
+  optional QueryRequest queryRequest = 13;
+  optional LeftJoinRequest leftJoinRequest = 14;
+  optional QueryResponse queryResponse = 15;
+  optional TokenTrackingResponse tokenTrackingResponse = 16;
+  optional QueryReferenceResponse queryReferenceResponse = 17;
+  optional MetricQueryRequest metricQueryRequest = 18;
+  optional MetricQueryResponse metricQueryResponse = 19;
+   
+  optional LogLineSet logLineSet = 20;
+  repeated WorkingEntity workingEntity = 21; // Workers, DCs, Buddies, Master. Strictly used for lists
+  
+  optional NameSpaceWorkerTuple nameSpaceWorkerTuple = 22;
+  optional QueryRequestBlockList queryRequestBlockList = 23;
+  
+  optional string keyForLogLineSetWrite = 24;
+ }
