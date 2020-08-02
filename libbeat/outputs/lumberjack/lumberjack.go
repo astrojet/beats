@@ -45,6 +45,7 @@ func init() {
 		Error.Println("Error reading Lumberjack Config from Env. Invalid Lumberjack config.")
 	}
 	LumberConfig = *config
+	go PrintMetrics()
 }
 
 type lumberjackOutput struct {
@@ -83,7 +84,7 @@ func (out *lumberjackOutput) Publish(
 
 	eventsDropped := 0
 	if LumberConfig.PostMetrics == true {
-		eventsDropped = IngestLogs(batch)
+		IngestLogs(batch)
 	}else{
 		eventsDropped= len(batch.Events())
 	}
