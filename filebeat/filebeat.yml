@@ -38,7 +38,7 @@ filebeat.inputs:
 
   # Exclude files. A list of regular expressions to match. Filebeat drops the files that
   # are matching any regular expression from the list. By default, no files are dropped.
-  #exclude_files: ['.gz$']
+  exclude_files: ['.gz$']
 
   # Optional additional fields. These fields can be freely picked
   # to add additional information to the crawled log files for filtering
@@ -186,7 +186,7 @@ processors:
 
 # Sets log level. The default log level is info.
 # Available log levels are: error, warning, info, debug
-#logging.level: debug
+logging.level: info
 
 # At debug level, you can selectively enable logging only for some components.
 # To enable all selectors use ["*"]. Examples of other selectors are "beat",
